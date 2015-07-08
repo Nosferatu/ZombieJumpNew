@@ -1,0 +1,80 @@
+import pygame 
+import os
+from pygame.locals import *
+
+
+
+def load_sliced_sprites(w, h, filename):
+    images= []
+    master_image = pygame.image.load(filename).convert_alpha()
+    master_width,master_height = master_image.get_size()
+    for i in xrange(int(master_width/w)):                  
+        images.append(master_image.subsurface((i*w,0,w,h)))
+    
+    return images
+
+class fatZombie(pygame.sprite.Sprite):
+    def __init__(self,initial_position,fps):
+        pygame.sprite.Sprite.__init__(self)
+        self.act_frame = 0
+        self.imagesShow = load_sliced_sprites(100,100,"FetterZombie.png")
+        self.imagesWalk = load_sliced_sprites(100,100,"FetterZombieWalk.png")
+        self.image = self.imagesShow[0]
+        self.rect= self.image.get_rect()
+        self.rect.topleft=initial_position
+        self.fps = fps
+        self.speed= 2
+        self.show = False
+        self.change_time = 1.0/self.fps
+        self.time = 0
+        self.change = True
+        self.mask = pygame.mask.from_surface(self.image)
+    
+    def update(self,time_passed,spawn):
+        self.time += time_passed
+        if self.show:
+            self.speed = 3
+            if self.change:
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesShow)
+                    self.image = self.imagesShow[self.act_frame]
+                    self.time = 0
+                    self.change = False
+                    
+            else:
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesWalk)
+                    self.image = self.imagesWalk[self.act_frame]
+                    self.time = 0
+                    self.mask = pygame.mask.from_surface(self.image)
+                     
+        else: 
+            if self.rect.left <= spawn:
+                self.show = True        
+        self.rect.left -= self.speed
+        
+        
+class normZombie(pygame.sprite.Sprite):
+    def __init__(self,initial_position,fps):
+        pygame.sprite.Sprite.__init__(self)
+        self.act_frame = 0
+        
+        #self.images = load_sliced_sprites(100,100,"zombieTest.png")
+        #self.image = self.imagesShow[0]
+        self.image = pygame.image.load("zombieTest.png")
+        self.rect= self.image.get_rect()
+        self.rect.topleft=initial_position
+        self.fps = fps
+        self.speed= 2.5
+        self.show = False
+        self.change_time = 1.0/self.fps
+        self.time = 0
+
+
+    
+    def update(self,time_passed,spawn):
+        self.time += time_passed
+
+      
+        self.rect.left -= self.speed
+

@@ -1,0 +1,179 @@
+import pygame 
+import os
+from pygame.locals import *
+from random import randint
+from player import *
+from zombies import *
+from specials import *
+from pixelPerfect import *
+from objectGenerator import *
+
+def collision(obj1,obj2):
+    offset_x, offset_y = (obj2.rect.left - obj1.rect.left), (obj2.rect.top - obj1.rect.top)
+    if (obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None):
+        return True
+    else:
+        return False
+
+
+
+
+
+
+pygame.init()
+
+screen = pygame.display.set_mode((800, 600), 0, 32)
+pygame.display.set_caption("ZombieRun")
+
+player = Player((100,410),0.01)
+clock=pygame.time.Clock()
+
+
+              
+#cats = pygame.sprite.RenderUpdates()
+#cats.add(cat1,cat2,cat3,cat4,cat5)
+
+shot = pygame.sprite.RenderUpdates()
+bombCD = 0
+
+
+counter = 0
+font = pygame.font.SysFont("Arial", 20, True, False)
+label = font.render(str(counter),1,(0,0,0))
+
+
+b1 = "Background_01.png"
+back1 = pygame.image.load(b1).convert_alpha()
+back2 = pygame.image.load(b1).convert_alpha()
+x = 0 
+screenWidth = 1600
+
+
+expl_counter = 11
+
+normZ = normZombie((1200,410),0.01)
+fZombie = fatZombie((800,410),0.01)
+a = 200
+b = 800
+nextZombie = randint(a,b) #Abstand Zombie und naechster Zombie
+
+allzombies = pygame.sprite.RenderUpdates()
+allzombies.add(fZombie)
+allzombies.add(normZ)
+
+shotgun = Shotgun((600,360))
+ammo = 0
+
+powerups = pygame.sprite.RenderUpdates()
+powerups.add(shotgun)
+
+while True:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            exit()
+        if event.type == KEYDOWN:
+            if event.key == K_SPACE:
+                player.jump()
+
+
+            if event.key == K_s:
+                if bombCD <= 0 and ammo > 0:
+                    schuss=Shot(player.rect.center)
+                    shot.add(schuss)
+                    bombCD = 1000
+                    ammo -= 1 
+                    print ammo
+                else:
+                    pass
+            
+                
+        if event.type == KEYUP:
+            if event.key == K_RIGHT:
+                player.speed = 0
+                player.move = False
+            if event.key == K_LEFT:
+                player.speed = 0
+                player.move = False
+            
+    screen.blit(back1, (x,0))
+    screen.blit(back2,(x+screenWidth,0))
+    x = x - 2
+    if x <= -screenWidth:
+        x = 0
+
+    screen.blit(player.image,player.rect)
+    allzombies.draw(screen)
+    powerups.draw(screen)    
+    shot.draw(screen)
+    
+    label = font.render(str(counter),True,(0,0,0))
+    screen.blit(label,(280,20))
+
+    time_passed = clock.tick(100)
+    bombCD -= 30
+
+
+
+    if nextZombie>0:
+        nextZombie -= 2
+    else: 
+        fZombie = fatZombie((800,410),0.01)
+        nextZombie = randint(a,b) #Abstand Zombie und naechster Zombie
+        if a > 120:
+            a -= 5
+        if b > 250:
+            b -= 20
+            
+        allzombies.add(fZombie)
+        
+    for zombie in allzombies:
+        if collision(player,zombie):
+            time_passed = clock.tick(50)
+        
+        if zombie.rect.left < -100:
+            allzombies.remove(zombie)
+            
+    for shot1 in shot:
+        for zombie in allzombies:
+            if collision(shot1,zombie):  # Kollision zwischen shot1 und Zombie testen
+                allzombies.remove(zombie)  # kill Zombie
+                shot.remove(shot1)     # remove Shot
+                           
+          # score Points vielleicht
+        
+        if shot1.rect.left > 800:
+            shot.remove(shot1)
+    
+    if collision (player,shotgun):
+        ammo += 5
+        powerups.remove(shotgun)
+        shotgun = spawnNewShotgun()
+        powerups.add(shotgun)
+    elif shotgun.rect.left < -100:
+        powerups.remove(shotgun)
+        shotgun = spawnNewShotgun()
+        powerups.add(shotgun)
+
+
+    
+    player.update(time_passed)
+    allzombies.update(time_passed,590)
+    powerups.update()
+    shot.update()
+    
+    #allzombies.clear(screen,back1)
+    #allzombies.clear(screen,back2)
+
+    expl_counter +=1
+    
+ 
+    
+    
+    
+    
+    
+    
+    pygame.display.update()
+    
+
+    

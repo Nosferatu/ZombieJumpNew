@@ -1,0 +1,18 @@
+import pygame 
+import os
+from pygame.locals import *
+
+class Bomb(pygame.sprite.Sprite):
+    def __init__(self,initial_position):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("bomb.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image,(20,50))
+        self.rect= self.image.get_rect()
+        self.rect.topleft=initial_position
+        self.speed= -30
+
+
+    
+    def update(self):
+        
+        self.rect.bottom += self.speed

@@ -1,0 +1,36 @@
+import pygame 
+import os
+from pygame.locals import *
+
+class Shot(pygame.sprite.Sprite):
+    def __init__(self,initial_position):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("bomb.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image,(20,50))
+        self.rect= self.image.get_rect()
+        self.rect.topleft=initial_position
+        self.mask = pygame.mask.from_surface(self.image)
+        self.speed= 15
+
+
+    
+    def update(self):
+        
+        self.rect.left += self.speed
+
+
+
+class Shotgun(pygame.sprite.Sprite):
+    def __init__(self,initial_position):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("ShotgunTest.png").convert_alpha()
+        #self.image = pygame.transform.scale(self.image,(20,50))
+        self.rect= self.image.get_rect()
+        self.rect.topleft=initial_position
+        self.speed= 2
+        self.mask = pygame.mask.from_surface(self.image)
+
+
+    def update(self):
+        
+        self.rect.left -= self.speed

@@ -1,0 +1,16 @@
+import pygame 
+import os
+from pygame.locals import *
+from random import randint
+from player import *
+from zombies import *
+from specials import *
+
+    
+    
+
+    
+def spawnNewShotgun():
+    sgx = randint(800,3000)
+    shotgun = Shotgun((sgx,360))
+    return shotgun
