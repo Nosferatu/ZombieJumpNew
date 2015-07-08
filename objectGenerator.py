@@ -23,7 +23,7 @@ def spawnRandomZombie(x):
 def spawnNewCrate(cratetype):
     sgy = randint(250,400)
     sgx = randint(800,3000)
-    crate = Crate((sgx,sgy),0.02,2)
+    crate = Crate((sgx,sgy),0.02,cratetype)
     return crate
 
 def spawnNewCafe():
