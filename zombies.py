@@ -372,7 +372,8 @@ class Tank(pygame.sprite.Sprite):
         self.imagesStand = load_sliced_sprites(200,200,"Tank.png")
         self.imagesThrow = load_sliced_sprites(300,300,"TankThrow.png")
         self.imagesDead = load_sliced_sprites(150,100,"FetterZombieDie.png") #ToDo
-        self.imagesOnFire = load_sliced_sprites(300,300,"TankBurningStart.png") 
+        self.imagesOnFire = load_sliced_sprites(300,300,"TankBurningStart.png")
+        self.imagesFire = load_sliced_sprites(300,300,"TankBurning.png")
         self.imagesDeadFlame = load_sliced_sprites(150,100,"FetterZombieDieFlame.png") #ToDo        
         self.image = self.imagesJumpIn[0]
         #self.image = pygame.transform.scale(self.image,(120,120))
@@ -386,7 +387,8 @@ class Tank(pygame.sprite.Sprite):
         self.time = 0
         self.change = True
         self.burn = False
-        self.burnStart = 4
+        self.burnStart = 3
+        self.burnStand = 24
         self.health = 7
         self.mask = pygame.mask.from_surface(self.image)
         self.dead = False
@@ -438,6 +440,14 @@ class Tank(pygame.sprite.Sprite):
                     self.image = self.imagesOnFire[self.act_frame]
                     self.time = 0
                     self.mask = pygame.mask.from_surface(self.image)
+                    self.burnStart -= 1
+            elif self.burnStand > 0:
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesFire)
+                    self.image = self.imagesFire[self.act_frame]
+                    self.time = 0
+                    self.mask = pygame.mask.from_surface(self.image)
+                    #self.burnStand -= 1
             #else:
                 
         
