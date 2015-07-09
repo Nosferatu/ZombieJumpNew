@@ -111,7 +111,6 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                 else:
                     hearts.remove(heart)
             if player.lifes == 0:
-                #time_passed = clock.tick(50)
                 player.dead = True
                 gameOver(True,player,x) # Game Over
             zombie.act_frame = 0
@@ -270,7 +269,6 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                 else:
                     hearts.remove(heart)
             if player.lifes == 0:
-                #time_passed = clock.tick(30) #Bullet Time wenn man stirbt
                 player.dead = True
                 gameOver(True,player,x) # Game Over
       
@@ -299,7 +297,7 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
     ui = pygame.sprite.RenderUpdates()
     ui.add(power)
   
-    bossSpawn = randint(400,1000)
+    bossSpawn = 50#randint(400,1000)
     
     nextZombie = randint(a,b) #Abstand Zombie und naechster Zombie
     
@@ -382,7 +380,6 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
             bossfight(x,allzombies,player,a,b)
     
         if power.empty:
-            time_passed = clock.tick(50) #Bullet Time wenn man stirbt
             player.dead = True
             gameOver(True,player,x) # Game Over
 
@@ -503,9 +500,12 @@ def bossfight(x,allzombies,player,a,b):
             
         for shot1 in shot:
             if collision (shot1,tankBoss):
-                tankBoss.health -= 1
-                shot.remove(shot1)
-                
+                if shot1.type == 0:
+                    tankBoss.health -= 1
+                    shot.remove(shot1)
+                elif shot1.type == 1:
+                    tankBoss.health -= 0.01
+                    tankBoss.burn = True
                 if tankBoss.health <= 0:
                     tankBoss.dead = True
         
@@ -577,22 +577,13 @@ def start(startThisShit):
         
         
 def gameOver(over,player,x):
-    
-
-    
-
-
-    
 
     clock=pygame.time.Clock()
     
     over = GameOverScreen((0,0),0.013)
     
     screen.blit(over.image,over.rect)
-           
-    
-    
-    
+
     font = pygame.font.SysFont("Arial", 40, True, True)
     font2 = pygame.font.SysFont("Arial", 60, True, True)
     while over:
@@ -630,7 +621,7 @@ def gameOver(over,player,x):
                         buttonSoundOnOff.clicked = False
                     
                     
-        time_passed = clock.tick(100)
+        time_passed = clock.tick(50)
         screen.blit(back1, (x,0))
         screen.blit(back2,(x+screenWidth,0))
         x = x - 2

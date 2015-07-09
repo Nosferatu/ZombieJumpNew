@@ -372,6 +372,7 @@ class Tank(pygame.sprite.Sprite):
         self.imagesStand = load_sliced_sprites(200,200,"Tank.png")
         self.imagesThrow = load_sliced_sprites(300,300,"TankThrow.png")
         self.imagesDead = load_sliced_sprites(150,100,"FetterZombieDie.png") #ToDo
+        self.imagesOnFire = load_sliced_sprites(300,300,"TankBurningStart.png") 
         self.imagesDeadFlame = load_sliced_sprites(150,100,"FetterZombieDieFlame.png") #ToDo        
         self.image = self.imagesJumpIn[0]
         #self.image = pygame.transform.scale(self.image,(120,120))
@@ -384,6 +385,8 @@ class Tank(pygame.sprite.Sprite):
         self.change_time = 1.0/self.fps
         self.time = 0
         self.change = True
+        self.burn = False
+        self.burnStart = 4
         self.health = 7
         self.mask = pygame.mask.from_surface(self.image)
         self.dead = False
@@ -414,7 +417,29 @@ class Tank(pygame.sprite.Sprite):
                 self.speedy = 0
                 self.speedx = 0
                 self.rect.top = 300
-            
+                
+        if self.burn:
+            self.rect.top = 200
+            self.rect.left = 418
+            self.throwcounter = -1
+            self.speedy = 0
+            self.health -= 0.01
+            if self.change:
+                self.act_frame = 0
+               
+                if self.time >= self.change_time:
+                    self.image = self.imagesOnFire[self.act_frame]
+                    self.time = 0
+                    self.mask = pygame.mask.from_surface(self.image)
+                    self.change = False
+            elif self.burnStart > 0:
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesOnFire)
+                    self.image = self.imagesOnFire[self.act_frame]
+                    self.time = 0
+                    self.mask = pygame.mask.from_surface(self.image)
+            #else:
+                
         
         elif self.throwcounter > 0:
             self.rect.top = 300
@@ -424,7 +449,7 @@ class Tank(pygame.sprite.Sprite):
             self.mask = pygame.mask.from_surface(self.image)
                 
                
-        if self.throwcounter == 0:
+        elif self.throwcounter == 0:
             self.rect.top = 200
             self.rect.left = 418
             if self.time >= self.change_time:
@@ -443,7 +468,14 @@ class Tank(pygame.sprite.Sprite):
                 self.rect.left += 50
             elif self.lengthThrow == 0:
                 self.throwFinished = True
-               
+        
+        if self.health <= 0:
+            self.dead = True
+            if self.burn:
+                self.flameDead = True
+                self.burn = False
+            
+                  
         self.rect.left -= self.speedx
         self.rect.top += self.speedy        
         

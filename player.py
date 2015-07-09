@@ -37,12 +37,12 @@ class Player(pygame.sprite.Sprite):
         #player attribute
         self.shotgunAmmo = 0
         self.reloadCD = 0
-        self.gasAmmo = 0
+        self.gasAmmo = 400
         self.kills = 0
         self.distance = 0
         
         self.shotgun = False
-        self.flamethrower = False
+        self.flamethrower = True
         
         
         self.time = 0.0
@@ -57,7 +57,7 @@ class Player(pygame.sprite.Sprite):
         self.doublejumpDuration = 0.0
         self.chainsawCounter = 0.0
         self.dead = False
-        self.dieCounter = 4
+        self.dieCounter = 3
         
     def jump(self):
         self.isjump = True
@@ -140,7 +140,7 @@ class Player(pygame.sprite.Sprite):
             elif self.time >= self.change_time:
                 self.act_frame = (self.act_frame + 1) % len(self.imagesDie)
 
-                self.image = self.imagesDie[self.act_frame]
+                self.image = self.imagesDie[3-self.dieCounter]
                 self.image = pygame.transform.scale(self.image,(220,144))
                 self.mask = pygame.mask.from_surface(self.image)
                 self.time = 0
