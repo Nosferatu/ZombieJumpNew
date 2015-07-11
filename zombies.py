@@ -1,4 +1,4 @@
-import pygame 
+import pygame
 import os
 from pygame.locals import *
 from random import randint
@@ -38,13 +38,17 @@ class NormalZombie(pygame.sprite.Sprite):
         self.counter = 0
         self.type = 0
         self.flameDie = False
+        self.tank = False
     
-    def update(self,time_passed,spawn):
+    def update(self,time_passed):
         self.time += time_passed
             
                 
         if self.dead:
-            self.speed = 2
+            if self.tank:
+                self.speed = 0
+            else:
+                self.speed = 2
             if self.lengthDead <= 0 and self.flameDie == False:
                     
                 self.image = self.imagesDead[7]
@@ -106,15 +110,16 @@ class Spitter(pygame.sprite.Sprite):
         self.dead = False
         self.lengthDead = 7
         self.counter = 700
-        self.stopTime = randint(520,580)
+        self.stopPosition = randint(500,650)
         self.shoot = False
         self.spitCounter = 200
         self.type = 1
         self.spitEnd = False
         self.flameDie = False
+        self.tank = False
         
     
-    def update(self,time_passed,spawn):
+    def update(self,time_passed):
         self.time += time_passed
            
             
@@ -140,7 +145,7 @@ class Spitter(pygame.sprite.Sprite):
                 self.time = 0
                 self.mask = pygame.mask.from_surface(self.image)
         
-        elif self.counter <= self.stopTime and self.dead == False:
+        elif self.rect.left <= self.stopPosition and self.dead == False:
             self.speed = 0
             if self.time >= self.change_time:
                 self.act_frame = (self.act_frame + 1) % len(self.imagesBackwards)
@@ -152,7 +157,11 @@ class Spitter(pygame.sprite.Sprite):
         
         if self.dead:
             
-            self.speed = 2
+            if self.tank:
+                self.speed = 0
+            else:
+                self.speed = 2
+                
             if self.lengthDead <= 0 and self.flameDie == False:
                     
                 self.image = self.imagesDead[7]
@@ -188,7 +197,7 @@ class Spitter(pygame.sprite.Sprite):
         
         
 class FatZombie(pygame.sprite.Sprite):
-    def __init__(self,initial_position,fps):
+    def __init__(self,initial_position,fps,spawn):
         pygame.sprite.Sprite.__init__(self)
         self.act_frame = 0
         self.imagesShow = load_sliced_sprites(100,100,"FetterZombie3.png")
@@ -211,8 +220,10 @@ class FatZombie(pygame.sprite.Sprite):
         self.counter = 0
         self.type = 2
         self.flameDie = False
+        self.spawn = spawn
+        self.tank = False
     
-    def update(self,time_passed,spawn):
+    def update(self,time_passed):
         self.time += time_passed
         if self.show:
             self.speed = 3
@@ -228,7 +239,10 @@ class FatZombie(pygame.sprite.Sprite):
                 
                     
             if self.dead:
-                self.speed =2
+                if self.tank:
+                    self.speed = 0
+                else:
+                    self.speed = 2
                 #print self.lengthDead
                 if self.lengthDead <= 0 and self.flameDie == False:
                     
@@ -266,8 +280,10 @@ class FatZombie(pygame.sprite.Sprite):
                     self.time = 0
                     self.mask = pygame.mask.from_surface(self.image)
                      
-        else: 
-            if self.rect.left <= spawn:
+        else:
+            if self.dead:
+                self.show = False 
+            elif self.rect.left <= self.spawn:
                 self.show = True        
         self.rect.left -= self.speed
         
@@ -300,8 +316,9 @@ class Charger(pygame.sprite.Sprite):
         self.counter = len(self.imagesStomp)
         self.type = 3
         self.flameDie = False
+        self.tank = False
     
-    def update(self,time_passed,spawn):
+    def update(self,time_passed):
         self.time += time_passed
         if self.change and self.dead == False:
             if self.counter == 0:
@@ -324,7 +341,10 @@ class Charger(pygame.sprite.Sprite):
             
                 
         if self.dead:
-            self.speed =2
+            if self.tank:
+                self.speed = 0
+            else:
+                self.speed = 2
                 #print self.lengthDead
             if self.lengthDead <= 0:
                     
@@ -371,16 +391,16 @@ class Tank(pygame.sprite.Sprite):
         self.imagesJumpIn = load_sliced_sprites(200,200,"TankJumpIn.png")
         self.imagesStand = load_sliced_sprites(200,200,"Tank.png")
         self.imagesThrow = load_sliced_sprites(300,300,"TankThrow.png")
-        self.imagesDead = load_sliced_sprites(150,100,"FetterZombieDie.png") #ToDo
+        self.imagesDead = load_sliced_sprites(300,300,"TankDie.png") 
         self.imagesOnFire = load_sliced_sprites(300,300,"TankBurningStart.png")
-        self.imagesFire = load_sliced_sprites(300,300,"TankBurning.png")
-        self.imagesDeadFlame = load_sliced_sprites(150,100,"FetterZombieDieFlame.png") #ToDo        
+        self.imagesFire = load_sliced_sprites(300,300,"TankBurningWalk.png")
+        self.imagesDeadFlame = load_sliced_sprites(300,300,"TankDieFlame.png")       
         self.image = self.imagesJumpIn[0]
-        #self.image = pygame.transform.scale(self.image,(120,120))
+
         self.rect= self.image.get_rect()
         self.rect.topleft=initial_position
         self.fps = fps
-        self.speedx = 3.5
+        self.speed = 3.5
         self.speedy = 2
         self.show = False
         self.change_time = 1.0/self.fps
@@ -388,14 +408,14 @@ class Tank(pygame.sprite.Sprite):
         self.change = True
         self.burn = False
         self.burnStart = 3
-        self.burnStand = 24
+        self.burnStand = 5
         self.health = 7
         self.mask = pygame.mask.from_surface(self.image)
         self.dead = False
-        self.lengthDead = 7
+        self.lengthDead = 4
         self.lengthThrow = len(self.imagesThrow)
         self.lengthJI = len(self.imagesJumpIn)
-        self.throwcounter = 300
+        self.throwcounter = 200
         self.throwFinished = False
         self.type = 4
         self.flameDead = False
@@ -406,6 +426,7 @@ class Tank(pygame.sprite.Sprite):
 
         
         if self.lengthJI > 0:
+
             if self.time >= self.change_time:
                 self.act_frame = (self.act_frame + 1) % len(self.imagesJumpIn)
                 self.image = self.imagesJumpIn[self.act_frame]
@@ -415,14 +436,42 @@ class Tank(pygame.sprite.Sprite):
                 self.speedy +=1
                 self.lengthJI -= 1
                 
-            if self.rect.top > 300:
+            if self.rect.top > 315:
                 self.speedy = 0
-                self.speedx = 0
-                self.rect.top = 300
+                self.speed = 0
+                self.rect.top = 315
+                
+        elif self.throwcounter > 0:
+            self.rect.top = 315
+            self.rect.left = 468
+            self.throwcounter -= 1
+            self.image = self.imagesStand[0]
+            self.mask = pygame.mask.from_surface(self.image)
+            
+        elif self.throwcounter == 0:
+            self.rect.top = 215
+            self.rect.left = 418
+            if self.time >= self.change_time:
+                self.act_frame = (self.act_frame + 1) % len(self.imagesThrow)
+                self.image = self.imagesThrow[self.act_frame]
+                #self.image = pygame.transform.scale(self.image,(130,130))
+                self.time = 0
+                self.mask = pygame.mask.from_surface(self.image)
+                self.lengthThrow -= 1
+                
+                
+            if self.throwFinished:
+                self.throwFinished = False
+                self.throwcounter = 80
+                self.lengthThrow = len(self.imagesThrow)
+                self.rect.left += 50
+            elif self.lengthThrow == 0:
+                self.throwFinished = True
                 
         if self.burn:
-            self.rect.top = 200
-            self.rect.left = 418
+            self.speed = 0
+            self.rect.top = 215
+            #self.rect.left = 418
             self.throwcounter = -1
             self.speedy = 0
             self.health -= 0.01
@@ -447,45 +496,59 @@ class Tank(pygame.sprite.Sprite):
                     self.image = self.imagesFire[self.act_frame]
                     self.time = 0
                     self.mask = pygame.mask.from_surface(self.image)
-                    #self.burnStand -= 1
-            #else:
+                    self.burnStand -= 1
+            else:
+                self.speed = 1
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesFire)
+                    self.image = self.imagesFire[self.act_frame]
+                    self.time = 0
+                    self.mask = pygame.mask.from_surface(self.image)
+                    self.burnStand -= 1
+        if self.dead:
+
+            self.speed = 2
+            self.rect.top = 215
+            self.throwcounter = -1
+            self.speedy = 0
+
+            if self.lengthDead <= 0 and self.flameDead == False:
+                    
+                self.image = self.imagesDead[4]
+                self.image = pygame.transform.scale(self.image,(300,300))
+             
+            
+            elif self.lengthDead <= 0 and self.flameDead:     
+                    self.image = self.imagesDeadFlame[4]
+                    self.image = pygame.transform.scale(self.image,(300,300))
+                    
+            elif self.flameDead:
+
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesDeadFlame)
+                    self.image = self.imagesDeadFlame[self.act_frame]
+                    self.image = pygame.transform.scale(self.image,(300,300))
+                    self.time = 0
+                    self.lengthDead -= 1           
                 
-        
-        elif self.throwcounter > 0:
-            self.rect.top = 300
-            self.rect.left = 468
-            self.throwcounter -= 1
-            self.image = self.imagesStand[0]
-            self.mask = pygame.mask.from_surface(self.image)
-                
-               
-        elif self.throwcounter == 0:
-            self.rect.top = 200
-            self.rect.left = 418
-            if self.time >= self.change_time:
-                self.act_frame = (self.act_frame + 1) % len(self.imagesThrow)
-                self.image = self.imagesThrow[self.act_frame]
-                #self.image = pygame.transform.scale(self.image,(130,130))
-                self.time = 0
-                self.mask = pygame.mask.from_surface(self.image)
-                self.lengthThrow -= 1
-                
-                
-            if self.throwFinished:
-                self.throwFinished = False
-                self.throwcounter = 80
-                self.lengthThrow = len(self.imagesThrow)
-                self.rect.left += 50
-            elif self.lengthThrow == 0:
-                self.throwFinished = True
-        
-        if self.health <= 0:
+     
+            else:
+                print self.lengthDead
+                if self.time >= self.change_time:
+                    self.act_frame = (self.act_frame + 1) % len(self.imagesDead)
+                    self.image = self.imagesDead[self.act_frame]
+                    self.image = pygame.transform.scale(self.image,(300,300))
+                    self.time = 0
+                    self.lengthDead -= 1
+                    
+        if self.health <= 0 and self.dead == False:
+            self.act_frame = 0
             self.dead = True
             if self.burn:
                 self.flameDead = True
                 self.burn = False
             
                   
-        self.rect.left -= self.speedx
+        self.rect.left -= self.speed
         self.rect.top += self.speedy        
         

@@ -13,7 +13,8 @@ def spawnRandomZombie(x):
     if type <= 50: #60%-Chance, dass normaler Zombie spawned
         zombie = NormalZombie((x,370),0.01)
     elif type <= 80: #40% Chance, dass fetter Zombie spawned
-        zombie = FatZombie((x,390),0.01)
+        spawn = randint (350,700)
+        zombie = FatZombie((x,390),0.01,spawn)
     elif type <= 93: # Chance, dass fetter Zombie spawned
         zombie = Charger((x,380),0.01)
     elif type <= 100:
@@ -23,7 +24,7 @@ def spawnRandomZombie(x):
 def spawnNewCrate(cratetype):
     sgy = randint(250,400)
     sgx = randint(800,3000)
-    crate = Crate((sgx,sgy),0.02,cratetype)
+    crate = Crate((sgx,sgy),0.02,cratetype,2)
     return crate
 
 def spawnNewCafe():

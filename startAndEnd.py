@@ -15,10 +15,10 @@ def load_sliced_sprites(w, h, filename):
 
 
 class GameOverScreen(pygame.sprite.Sprite):
-    def __init__(self,initial_position,fps):
+    def __init__(self,initial_position,fps,images):
         pygame.sprite.Sprite.__init__(self)
         
-        self.images = load_sliced_sprites(400,300,"GameOverScreen3.png")
+        self.images = images
         self.image = self.images[0]
         self.image = pygame.transform.scale(self.image,(800,600))
         self.rect= self.image.get_rect()

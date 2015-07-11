@@ -1,4 +1,4 @@
-import pygame 
+import pygame
 import os
 import sys
 from pygame.locals import *
@@ -33,6 +33,7 @@ def checkEvents(player,shot):
                         buttonSoundOnOff.change = False
                         pygame.mixer.music.pause()
                         buttonSoundOnOff.clicked = True
+
     
                     else:
                         buttonSoundOnOff.change = True
@@ -59,7 +60,7 @@ def checkEvents(player,shot):
                         pass
                 
                 if event.key == K_a:
-                        #flame_sound.play()
+                        
                     if player.gasAmmo > 0 and player.invincible == False and player.isjump == False:  
                         flamethrower_sound.play()
                         player.flamethrower = True
@@ -68,6 +69,13 @@ def checkEvents(player,shot):
                         flameShot.shot = True
                         shot.add(flameShot)
                         player.throwFlames = True 
+                        
+                if event.key == K_d:
+                    if player.bombAmmo >= 1:
+                        bombExplosion_sound.play()
+                        bomb = Airstrike((750,-150),0.01,imagesExplosion)
+                        shot.add(bomb)
+                        player.bombAmmo -= 1
               
                   
             if event.type == KEYUP:
@@ -98,7 +106,7 @@ def checkEvents(player,shot):
                     pygame.mixer.music.unpause()
                     buttonSoundOnOff.clicked = False
           
-def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
+def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b,back1,back2,screenWidth):
     for zombie in allzombies:
         if collision(player,zombie) and zombie.dead == False and player.invincible == False:
             
@@ -112,7 +120,8 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                     hearts.remove(heart)
             if player.lifes == 0:
                 player.dead = True
-                gameOver(True,player,x) # Game Over
+                player.act_frame = 0
+                gameOver(True,player,x,back1,back2,screenWidth) # Game Over
             zombie.act_frame = 0
             zombie.dead = True
             player.kills +=1  
@@ -159,8 +168,9 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                 player.kills +=1
                 if shot1.type == 0:
                     shot.remove(shot1)     # remove Shot
-                if shot1.type == 1:
-                    zombie.flameDie = True           
+                if shot1.type >= 1:
+                    zombie.flameDie = True    
+                       
         
         if shot1.rect.left > 800:
             shot.remove(shot1)
@@ -180,6 +190,7 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
             crate.hit = True
             
             if crate.cratetype == 1:
+                ExtraLifeSpeech_sound.play()
                 player.lifes += 1
                 heart = spawnNewHeart(player.lifes)
                 hearts.add(heart)
@@ -189,52 +200,71 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                 player.flamethrower = False
                 shotgunSpeech_sound.play()
             elif crate.cratetype == 3:
-                player.doublejump = True
-                player.doublejumpDuration = 10000
+                player.flamethrower = True
+                player.gasAmmo += 200
+                player.shotgun = False
+                flamethrowerSpeech_sound.play()
             elif crate.cratetype == 4:
                 player.invincible = True
                 chainsaw_sound.play()
+                chainsawSpeech_sound.play()
     
                 player.chainsawCounter = 7000
                 
             elif crate.cratetype == 5:
-                player.flamethrower = True
-                player.gasAmmo += 200
-                player.shotgun = False
+                player.doublejump = True
+                player.doublejumpDuration = 10000
+                doubleJumpSpeech_sound.play()
             elif crate.cratetype == 6:
                 player.shotgun = False
                 player.flamethrower = False
                 player.gasAmmo = 0
                 player.shotgunAmmo = 0
                 player.invincible = False
+                player.bombAmmo = 0
                 player.chainsawCounter = 0
+                weaponLossSpeech_sound.play()
     
             elif crate.cratetype == 7:
                 ersterZombieX = 900
-                i = 1
-                while i < 6:
+                i = player.distance / 100
+                zombieAttackSpeech_sound.play()
+                while i > 0:
                     zombie = spawnRandomZombie(ersterZombieX)
                     allzombies.add(zombie)
-                    i += 1
-                    abstandZombie = randint(120,250)
+                    i -= 1
+                    abstandZombie = randint(300,450)
                     ersterZombieX += abstandZombie
-
                     
+            elif crate.cratetype == 8:
+                
+                player.bombAmmo += 1
+                airstrikeSpeech_sound.play()
+
+            
+            if screenWidth == 6000:
+                crateMax = 8
+            else:
+                crateMax = 7        
                 
             if player.lifes >= 3: # Keine Herzen mehr spawnen
-                crateType = randint(2,7)
+                crateType = randint(2,crateMax)
             else: 
-                crateType = randint(1,7)
+                crateType = randint(1,crateMax)
             crate = spawnNewCrate(crateType)
             
             powerups.add(crate)
         elif crate.rect.left < -100 and crate.type == 1:
             powerups.remove(crate)
+            if screenWidth == 6000:
+                crateMax = 8
+            else:
+                crateMax = 7 
             if crate.hit == False: #nur neue Kiste spawnen, wenn sie nicht eingesammelt wurde.
                 if player.lifes == 3: # Keine Herzen mehr spawnen
-                    crateType = randint(2,7)
+                    crateType = randint(2,crateMax)
                 else: 
-                    crateType = randint(1,7)
+                    crateType = randint(1,crateMax)
                 crate = spawnNewCrate(crateType)
             
                 powerups.add(crate)        
@@ -270,7 +300,9 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                     hearts.remove(heart)
             if player.lifes == 0:
                 player.dead = True
-                gameOver(True,player,x) # Game Over
+                player.tank = False
+                player.act_frame = 0
+                gameOver(True,player,x,back1,back2,screenWidth) # Game Over
       
         elif projectile.rect.left < -100:
             projectiles.remove(projectile)
@@ -278,7 +310,9 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b):
                 
 
 #Starte neues Spiel
-def gameStart():
+def gameStart(background,screenWidth):
+    back1 = pygame.image.load(background).convert_alpha()
+    back2 = pygame.image.load(background).convert_alpha()
     
     player = Player((100,365),0.015) 
        
@@ -286,18 +320,20 @@ def gameStart():
     b = 800
     
     allzombies = pygame.sprite.RenderUpdates()    
-    
-    continueGame(player,0,allzombies,a,b,True)
+    if screenWidth == 6000:
+        continueGame(player,0,allzombies,a,b,False,back1,back2,screenWidth)
+    else:
+        continueGame(player,0,allzombies,a,b,True,back1,back2,screenWidth)
   
 #Setze gestartetes Spiel endlos fort  
-def continueGame(player,x,allzombies,a,b,spawnBoss):
+def continueGame(player,x,allzombies,a,b,spawnBoss,back1,back2,screenWidth):
     
     power = Powerbar((250,20),0.0005)
     
     ui = pygame.sprite.RenderUpdates()
     ui.add(power)
   
-    bossSpawn = 50#randint(400,1000)
+    bossSpawn = randint(400,1000)
     
     nextZombie = randint(a,b) #Abstand Zombie und naechster Zombie
     
@@ -343,9 +379,9 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
             screen.blit(label,(60,25))
         
         if player.doublejumpDuration > 0.0:
-            screen.blit(doubleJump,(10,60))
+            screen.blit(doubleJump,(10,180))
             labelJump = font.render("Jump Time: "+str(player.doublejumpDuration*0.001),True,(255,255,255))
-            screen.blit(labelJump,(60,60))
+            screen.blit(labelJump,(60,180))
             
         if player.chainsawCounter > 0.0:
             screen.blit(chainsaw,(10,60))
@@ -358,11 +394,13 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
             labelFlamethrower= font.render("Flamethrower: "+str(player.gasAmmo),True,(255,255,255))
             screen.blit(labelFlamethrower,(60,100))  
         
-        if zombieCounter >0:
-            screen.blit(zombiePlus,(550,60))
-            labelZombiePlus= font.render("Zombie Attack: "+str(zombieCounter*0.001),True,(255,255,255))
-            screen.blit(labelZombiePlus,(600,60)) 
+        if player.bombAmmo >0:
+            screen.blit(airstrike,(10,140))
+            labelAirstrike= font.render("Airstrike: "+str(player.bombAmmo),True,(255,255,255))
+            screen.blit(labelAirstrike,(60,140)) 
     
+    
+
     
         time_passed = clock.tick(100)
         player.reloadCD -= 30
@@ -377,11 +415,12 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
         
 
         if player.distance >= bossSpawn and spawnBoss:
-            bossfight(x,allzombies,player,a,b)
+            bossfight(x,allzombies,player,a,b,back1,back2,screenWidth)
     
         if power.empty:
             player.dead = True
-            gameOver(True,player,x) # Game Over
+            player.act_frame = 0
+            gameOver(True,player,x,back1,back2,screenWidth) # Game Over
 
     
         if player.throwFlames:
@@ -408,16 +447,16 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
         if nextZombie>0:
             nextZombie -= 2
         else: 
-            fZombie = spawnRandomZombie(900)
+            fZombie = spawnRandomZombie(800)
             nextZombie = randint(a,b) #Abstand Zombie und naechster Zombie
-            if a > 150:
+            if a > 250:
                 a -= 5
-            if b > 250:
+            if b > 350:
                 b -= 10
                 
             allzombies.add(fZombie)
         
-        checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b)
+        checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b,back1,back2,screenWidth)
         
         
         #Soundabfragen:
@@ -431,7 +470,7 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
         player.update(time_passed)
         ui.update(time_passed)
         hearts.update(time_passed)
-        allzombies.update(time_passed,590)
+        allzombies.update(time_passed)
         powerups.update(time_passed)
         projectiles.update(time_passed)
         shot.update(time_passed)
@@ -440,17 +479,26 @@ def continueGame(player,x,allzombies,a,b,spawnBoss):
         pygame.display.update()
         
         
-def bossfight(x,allzombies,player,a,b):
+def bossfight(x,allzombies,player,a,b,back1,back2,screenWidth):
     for zombie in allzombies:
+        zombie.tank = True
         zombie.speed -= 2
         zombie.dead = True
+        zombie.act_frame = 0
     tankBoss = Tank((700,0),0.01)
+    
+    player.tank = True
     
     powerups = pygame.sprite.RenderUpdates()
     
     projectiles = pygame.sprite.RenderUpdates()
     
+    bloodsplat = Bloodsplat((tankBoss.rect.centerx-40,tankBoss.rect.centery-100),0.01)
+    
     ui = pygame.sprite.RenderUpdates()
+    
+    health = HealthTank((250,20))
+    
     
     while tankBoss.dead == False and tankBoss.flameDead == False:
         
@@ -467,7 +515,7 @@ def bossfight(x,allzombies,player,a,b):
         time_passed = clock.tick(100)
         player.reloadCD -= 30
         
-        checkAllCollisions(player, allzombies, powerups, ui, shot, projectiles,a,b)
+        checkAllCollisions(player, allzombies, powerups, ui, shot, projectiles,a,b,back1,back2,screenWidth)
         
         if tankBoss.throwcounter == 0 and tankBoss.lengthThrow == 3:          
             if len(projectiles.sprites()) == 0 and len(powerups.sprites()) == 0:
@@ -476,17 +524,22 @@ def bossfight(x,allzombies,player,a,b):
                     stone = Stone((tankBoss.rect.centerx-40,tankBoss.rect.centery-70),0.01)
                     projectiles.add(stone)
                 else:
-                    crate = Crate(((tankBoss.rect.centerx-40,tankBoss.rect.centery-70)),0.05,2)
+                    if player.lifes >= 3:
+                        cratetypeBoss = randint(2,3)
+                    else:
+                        cratetypeBoss = randint(1,3)
+                    crate = Crate(((tankBoss.rect.centerx-40,tankBoss.rect.centery-70)),0.05,cratetypeBoss,5)
                     powerups.add(crate)
         
         for crate in powerups:
             if crate.rect.left > tankBoss.rect.centerx-40:
                 powerups.remove(crate)
         
-             
-
+        
+        screen.blit(health.image, health.rect)
         screen.blit(player.image,player.rect)
         screen.blit(tankBoss.image,tankBoss.rect)
+        screen.blit(bloodsplat.image,bloodsplat.rect)
         allzombies.draw(screen)
         hearts.draw(screen)
         projectiles.draw(screen)
@@ -497,46 +550,93 @@ def bossfight(x,allzombies,player,a,b):
             screen.blit(shotgun,(10,20))
             label = font.render("Ammo: "+str(player.shotgunAmmo),True,(255,255,255))
             screen.blit(label,(60,25))
+        
+        if player.doublejumpDuration > 0.0:
+            screen.blit(doubleJump,(10,180))
+            labelJump = font.render("Jump Time: "+str(player.doublejumpDuration*0.001),True,(255,255,255))
+            screen.blit(labelJump,(60,180))
+            
+        if player.chainsawCounter > 0.0:
+            screen.blit(chainsaw,(10,60))
+            labelChainsaw = font.render("Invincible: "+str(player.chainsawCounter*0.001),True,(255,255,255))
+            screen.blit(labelChainsaw,(60,60))    
+            
+            
+        if player.gasAmmo> 0:
+            screen.blit(flamethrower,(5,80))
+            labelFlamethrower= font.render("Flamethrower: "+str(player.gasAmmo),True,(255,255,255))
+            screen.blit(labelFlamethrower,(60,100))  
+        
+        if player.bombAmmo >0:
+            screen.blit(airstrike,(10,140))
+            labelAirstrike= font.render("Airstrike: "+str(player.bombAmmo),True,(255,255,255))
+            screen.blit(labelAirstrike,(60,140)) 
+    
+        
+
+            
+        if player.throwFlames:
+            if player.gasAmmo>0:
+                player.gasAmmo -=1
+        
+            elif player.gasAmmo <= 0:
+                player.throwFlames = False
+                for shot1 in shot:
+                    if shot1.type == 1:
+                        shot.remove(shot1)
+                player.flamethrower = False  
+                flamethrower_sound.stop()     
+
+        if collision(player,tankBoss) and tankBoss.health > 0:
+            player.dead = True
+            player.tank = False
+            player.act_frame = 0
+            gameOver(True, player, x,back1, back2,screenWidth)         
             
         for shot1 in shot:
             if collision (shot1,tankBoss):
                 if shot1.type == 0:
                     tankBoss.health -= 1
+                    bloodsplat = Bloodsplat((tankBoss.rect.centerx-40,tankBoss.rect.centery-100),0.01)
+                    
                     shot.remove(shot1)
                 elif shot1.type == 1:
-                    tankBoss.health -= 0.01
+                    tankBoss.health -= 0.02
                     tankBoss.burn = True
-                if tankBoss.health <= 0:
-                    tankBoss.dead = True
         
+        bloodsplat.update(time_passed)
+        health.update(tankBoss)
         shot.update(time_passed)
         powerups.update(time_passed)
         projectiles.update(time_passed)
         hearts.update(time_passed)
-        allzombies.update(time_passed,590)
+        allzombies.update(time_passed)
         tankBoss.update(time_passed)
         player.update(time_passed)
         
         pygame.display.update()
     
+    allzombies.add(tankBoss)
     for zombie in allzombies:
         zombie.speed += 2
-    continueGame(player,x,allzombies,a,b,False)
+        zombie.tank = False
+        
+    player.kills += 10
+    player.tank = False    
+    continueGame(player,x,allzombies,a,b,False,back1,back2,screenWidth)
         
         
         
         
 def start(startThisShit):
 
-    startScreen = pygame.image.load("testStart.png").convert_alpha()
+    startScreen = pygame.image.load("StartScreen.png").convert_alpha()
     while startThisShit:
         for event in pygame.event.get():
             if event.type == QUIT:
                 sys.exit()
             if event.type == KEYDOWN:
-                if event.key == K_RETURN:
-                    startThisShit = False
-                    gameStart()
+
                 if event.key == K_m:
                     
                     if buttonSoundOnOff.change:
@@ -548,6 +648,15 @@ def start(startThisShit):
                         buttonSoundOnOff.change = True
                         pygame.mixer.music.unpause()
                         buttonSoundOnOff.clicked = False
+                        
+                if event.key == K_1:
+                    b = "Background_02.png"
+                    startThisShit = False
+                    gameStart(b,6000)
+                if event.key == K_2:
+                    b = "forest.png"
+                    startThisShit = False
+                    gameStart(b,3200)
             if event.type == MOUSEBUTTONDOWN:
                 mouse = pygame.mouse.get_pos()
                 
@@ -576,16 +685,19 @@ def start(startThisShit):
         pygame.display.update()
         
         
-def gameOver(over,player,x):
+def gameOver(over,player,x,back1,back2,screenWidth):
 
     clock=pygame.time.Clock()
     
-    over = GameOverScreen((0,0),0.013)
+    over = GameOverScreen((0,0),0.013,gameOverScreen)
     
     screen.blit(over.image,over.rect)
 
     font = pygame.font.SysFont("Arial", 40, True, True)
     font2 = pygame.font.SysFont("Arial", 60, True, True)
+    
+    gameOverSpeech_sound.play()
+    
     while over:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -593,7 +705,7 @@ def gameOver(over,player,x):
             if event.type == KEYDOWN:
                 if event.key == K_RETURN:
                     over = False
-                    gameStart()
+                    start(True)
                 if event.key == K_m:
                     
                     if buttonSoundOnOff.change:
@@ -672,9 +784,8 @@ pygame.mixer.music.set_volume(0.3)
 
 buttonSoundOnOff = ButtonSound((5,565))
 
-b1 = "Background_02.png"
-back1 = pygame.image.load(b1).convert_alpha()
-back2 = pygame.image.load(b1).convert_alpha()
+
+
 x = 0
 
 hearts = pygame.sprite.OrderedUpdates()
@@ -687,18 +798,32 @@ chainsaw = pygame.image.load("ChainsawBild.png").convert_alpha()
 
 flamethrower = pygame.image.load("Flamethrower.png").convert_alpha()
 
-zombiePlus = pygame.image.load("Powerdown_ZombiePlus.png").convert_alpha()
-zombiePlus = pygame.transform.scale(zombiePlus,(30,30))
+airstrike = pygame.image.load("BombSymbol.png").convert_alpha()
+airstrike = pygame.transform.scale(airstrike,(30,30))
     
  
-screenWidth = 6000
+
 
 shotgun_sound = pygame.mixer.Sound("shotgunSound2.wav")
 shotgun_sound.set_volume(0.5)
 
 shotgunSpeech_sound = pygame.mixer.Sound("shotgunSpeech_01.wav")
 
+airstrikeSpeech_sound = pygame.mixer.Sound("Airstrike.wav")
 
+chainsawSpeech_sound = pygame.mixer.Sound("Chainsaw.wav")
+
+flamethrowerSpeech_sound = pygame.mixer.Sound("Flamethrower.wav")
+
+ExtraLifeSpeech_sound = pygame.mixer.Sound("ExtraLife.wav")
+
+doubleJumpSpeech_sound = pygame.mixer.Sound("DoubleJump.wav")
+
+weaponLossSpeech_sound = pygame.mixer.Sound("WeaponLost.wav")
+
+zombieAttackSpeech_sound = pygame.mixer.Sound("ZombieAttack.wav")
+
+gameOverSpeech_sound = pygame.mixer.Sound("GameOver.wav")
 
 chainsawFlesh1_sound = pygame.mixer.Sound("chainsawFleshSound1.wav")
 chainsawFlesh1_sound.set_volume(0.5)
@@ -715,8 +840,15 @@ chainsawFlesh4_sound.set_volume(0.5)
 chainsaw_sound = pygame.mixer.Sound("chainsawSound.wav")
 chainsaw_sound.set_volume(0.5)
 
+bombExplosion_sound = pygame.mixer.Sound("bombExplosionSound.wav")
+bombExplosion_sound.set_volume(0.5)
+
 flamethrower_sound = pygame.mixer.Sound("FlamethrowerSound.wav")
 flamethrower_sound.set_volume(0.5)
+
+imagesExplosion = load_sliced_sprites(533,300,"LuftschlagExplosion.png")
+
+gameOverScreen = load_sliced_sprites(400,300,"GameOverScreen3.png")
 
 clock=pygame.time.Clock()
 shot = pygame.sprite.RenderUpdates()
