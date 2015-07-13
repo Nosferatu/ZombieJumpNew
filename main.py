@@ -238,7 +238,7 @@ def checkAllCollisions(player,allzombies,powerups,ui,shot,projectiles,a,b,back1,
                     
             elif crate.cratetype == 8:
                 
-                player.bombAmmo += 1
+                player.bombAmmo += 3
                 airstrikeSpeech_sound.play()
 
             
@@ -385,7 +385,7 @@ def continueGame(player,x,allzombies,a,b,spawnBoss,back1,back2,screenWidth):
             
         if player.chainsawCounter > 0.0:
             screen.blit(chainsaw,(10,60))
-            labelChainsaw = font.render("Invincible: "+str(player.chainsawCounter*0.001),True,(255,255,255))
+            labelChainsaw = font.render("Chainsaw: "+str(player.chainsawCounter*0.001),True,(255,255,255))
             screen.blit(labelChainsaw,(60,60))    
             
             
@@ -558,7 +558,7 @@ def bossfight(x,allzombies,player,a,b,back1,back2,screenWidth):
             
         if player.chainsawCounter > 0.0:
             screen.blit(chainsaw,(10,60))
-            labelChainsaw = font.render("Invincible: "+str(player.chainsawCounter*0.001),True,(255,255,255))
+            labelChainsaw = font.render("Chainsaw: "+str(player.chainsawCounter*0.001),True,(255,255,255))
             screen.blit(labelChainsaw,(60,60))    
             
             
